@@ -2,8 +2,36 @@
 #include "Parser.h"
 
 
+using Matrix = std::vector<std::vector<float>>;
+
+Matrix matmul(const Matrix& a, const Matrix& b) noexcept {
+    Matrix c(a.size());
+
+    for(int i = 0; i < a.size(); i++) {
+        c[i].resize(b[i].size());
+        for(int j = 0; j < a[i].size(); j++) {
+            float product = 0.f;
+            for(int k = 0; k < a.size(); k++) {
+                product += a[i][k] * b[k][j];
+            }
+            c[i][j] = product;
+        }
+    }
+
+    return c;
+}
+
+
 int main(int argc, char** argv) {
+
     auto nodes = Parser::getNodes("graph-test.txt");
+    auto matrix = Parser::getMatrix("graph-test.txt");
+
+    for(auto& vec : matrix.matrix) {
+        for(auto& el : vec)
+            std::cout << el << "  ";
+        std::cout << std::endl;
+    } 
 
     // print out    
     for(auto& [id, node] : nodes) {

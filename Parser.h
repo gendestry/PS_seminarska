@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include <vector>
@@ -20,6 +21,12 @@ struct Node {
     }
 };
 
+struct MatrixData {
+    std::vector<std::vector<float>> matrix; // stores the M matrix
+    std::unordered_map<unsigned int, unsigned int> id_map; // id mappings <ID, arrayIndex>
+    std::vector<unsigned int> outbound; // num outbound connections
+};
+
 
 class Parser {
 public:
@@ -27,4 +34,5 @@ public:
 	~Parser() = delete;
 
 	static std::unordered_map<unsigned int, Node*> getNodes(std::string path);
+    static MatrixData getMatrix(std::string path);
 };
