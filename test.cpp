@@ -10,13 +10,28 @@ template<typename T>
 void matrixIteration(std::string path);
 
 int main(int argc, char** argv) {
-    // graphIteration<float>("graph-test.txt");
-    // matrixIteration<float>("graph-test.txt");
-    Matrix<float> a {
+    graphIteration<float>("graph-test.txt");
+    matrixIteration<double>("graph-test.txt");
+    /*Matrix<float> a ( {
         {1, 2},
         {2, 3},
         {3, 4}
-    };
+    } );
+
+    Matrix<float> b ({{1,0,0}, {0,1,0}});
+    Matrix<float> id({{1,0,0},{0,1,0}, {0,0,1}});
+    Matrix<float> id2({{1,0,0},{0,1,0}, {0,0,1}});
+    // auto x = id.mul(a);
+    // id.scale(5.f);
+    id += id2;
+    id *= a;
+    id *= -1.0f;
+    std::cout << id;*/
+
+    /*Matrix<float> d ({{1,0},{0,0}});
+    Matrix<float> e ({{2,3},{4,5}});
+    auto f = ((d + e) * d) * 3;
+    std::cout << f; */
 
     return 0;
 }
@@ -42,11 +57,11 @@ void graphIteration(std::string path) {
 
     // start iterating
     T temp;
-    T sum_rank_diff = 1.0;
+    T rankDiff = 1.0;
     const T err = 1e-5;
 
-    for(int counter = 0; sum_rank_diff > err; counter++) {
-        sum_rank_diff = 0.0;
+    for(int counter = 0; rankDiff > err; counter++) {
+        rankDiff = 0.0;
         for(auto& [id, node] : nodes) {
             node->prev_rank = node->rank;
             temp = 0.0;
@@ -54,7 +69,7 @@ void graphIteration(std::string path) {
                 temp += child->prev_rank / child->out_count;
             }
             node->rank = offset + d * temp;
-            sum_rank_diff += fabs(node->rank - node->prev_rank);
+            rankDiff += fabs(node->rank - node->prev_rank);
             std::cout << "[" << counter << "] " << node->id << ": " << node->rank << std::endl;
         }
     }
@@ -64,12 +79,6 @@ template<typename T>
 void matrixIteration(std::string path) {
     auto matrixInfo = Parser::getMatrix<T>(path);
     auto& M = matrixInfo.matrix;
-
-    /*for(auto& vec : M) {
-        for(auto& el : vec)
-            std::cout << el << "  ";
-        std::cout << std::endl;
-    } */
 
     const int N = matrixInfo.id_map.size();
     const T initRank = 1.0 / N;
@@ -86,18 +95,15 @@ void matrixIteration(std::string path) {
         ones[i].push_back(offset);
     }
 
-    /*T sum_rank_diff = 1.0;
-    const T err = 1e-5;
+    T rankDiff = 1.0;
+    const T err = 1e-6;
 
-    for(int counter = 0; sum_rank_diff > err; counter++) {
-        sum_rank_diff = 0.0;
+    for(int counter = 0; rankDiff > err; counter++) {
+        rankDiff = 1.0;
         prev_rank = rank;
-        rank = matsum(matscale(matmul(M, prev_rank), d), ones);
-        sum_rank_diff = fabs(matsumel(rank) - matsumel(prev_rank));
-        std::cout << "[" << counter << "] ";
-        for(auto& el : rank) {
-            std::cout << el << "  ";
-        }
-        std::cout << std::endl;
-    }*/
+        rank = ((M * prev_rank) * d) + ones;
+        rankDiff = (rank - prev_rank).abs().sumElements();
+        std::cout << "[" << counter << "]" << std::endl;
+        std::cout << rank;
+    }
 }

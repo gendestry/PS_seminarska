@@ -102,7 +102,7 @@ MatrixData<T> Parser::getMatrix(std::string path) {
             matrix[yindex].resize(num_ids);
         }
 
-        matrix[yindex][id_map[from_id]] = 1.0f;
+        matrix[yindex][id_map[from_id]] = 1.0;
         outbound[id_map[from_id]]++;
     }
 
