@@ -3,14 +3,16 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include "Matrix.h"
 
+template<class T>
 struct Node {
     unsigned int id;
     unsigned int out_count;
-    float rank = 0.0f;
-    float prev_rank = 0.0f;
+    T rank = 0.0f;
+    T prev_rank = 0.0f;
 
-    std::vector<Node*> links;
+    std::vector<Node<T>*> links;
 
     friend std::ostream& operator<< (std::ostream& out, const Node* node) {
         out << node->id << "[" << node->out_count << "]\t";
@@ -21,8 +23,9 @@ struct Node {
     }
 };
 
+template<class T>
 struct MatrixData {
-    std::vector<std::vector<float>> matrix; // stores the M matrix
+    Matrix<T> matrix; // stores the M matrix
     std::unordered_map<unsigned int, unsigned int> id_map; // id mappings <ID, arrayIndex>
     std::vector<unsigned int> outbound; // num outbound connections
 };
@@ -33,6 +36,9 @@ public:
 	Parser() = delete;
 	~Parser() = delete;
 
-	static std::unordered_map<unsigned int, Node*> getNodes(std::string path);
-    static MatrixData getMatrix(std::string path);
+    template<class T>
+	static std::unordered_map<unsigned int, Node<T>*> getNodes(std::string path);
+
+    template<class T>
+    static MatrixData<T> getMatrix(std::string path);
 };

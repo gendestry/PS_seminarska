@@ -1,48 +1,39 @@
 #include <math.h>
 #include "Parser.h"
+#include "Matrix.h"
 
 
-using Matrix = std::vector<std::vector<float>>;
+template<typename T>
+void graphIteration(std::string path);
 
-Matrix matmul(const Matrix& a, const Matrix& b) noexcept {
-    Matrix c(a.size());
-
-    for(int i = 0; i < a.size(); i++) {
-        c[i].resize(b[i].size());
-        for(int j = 0; j < a[i].size(); j++) {
-            float product = 0.f;
-            for(int k = 0; k < a.size(); k++) {
-                product += a[i][k] * b[k][j];
-            }
-            c[i][j] = product;
-        }
-    }
-
-    return c;
-}
-
+template<typename T>
+void matrixIteration(std::string path);
 
 int main(int argc, char** argv) {
+    // graphIteration<float>("graph-test.txt");
+    // matrixIteration<float>("graph-test.txt");
+    Matrix<float> a {
+        {1, 2},
+        {2, 3},
+        {3, 4}
+    };
 
-    auto nodes = Parser::getNodes("graph-test.txt");
-    auto matrix = Parser::getMatrix("graph-test.txt");
+    return 0;
+}
 
-    for(auto& vec : matrix.matrix) {
-        for(auto& el : vec)
-            std::cout << el << "  ";
-        std::cout << std::endl;
-    } 
+template<typename T>
+void graphIteration(std::string path) {
+    auto nodes = Parser::getNodes<T>(path);
 
-    // print out    
     for(auto& [id, node] : nodes) {
         std::cout << node << std::endl; 
     }
 
     // initial setup
     const int N = nodes.size();
-    const float initRank = 1.0f / N;
-    const float d = 0.85f;
-    const float offset = (1 - d) / N;
+    const T initRank = 1.0 / N;
+    const T d = 0.85;
+    const T offset = (1 - d) / N;
 
     for(auto& [id, node] : nodes) {
         node->rank = initRank;
@@ -50,15 +41,15 @@ int main(int argc, char** argv) {
     }
 
     // start iterating
-    float temp;
-    float sum_rank_diff = 1.0f;
-    const float err = 1e-5;
+    T temp;
+    T sum_rank_diff = 1.0;
+    const T err = 1e-5;
 
     for(int counter = 0; sum_rank_diff > err; counter++) {
-        sum_rank_diff = 0.0f;
+        sum_rank_diff = 0.0;
         for(auto& [id, node] : nodes) {
             node->prev_rank = node->rank;
-            temp = 0.0f;
+            temp = 0.0;
             for(auto& child : node->links) {
                 temp += child->prev_rank / child->out_count;
             }
@@ -67,6 +58,46 @@ int main(int argc, char** argv) {
             std::cout << "[" << counter << "] " << node->id << ": " << node->rank << std::endl;
         }
     }
+}
 
-    return 0;
+template<typename T>
+void matrixIteration(std::string path) {
+    auto matrixInfo = Parser::getMatrix<T>(path);
+    auto& M = matrixInfo.matrix;
+
+    /*for(auto& vec : M) {
+        for(auto& el : vec)
+            std::cout << el << "  ";
+        std::cout << std::endl;
+    } */
+
+    const int N = matrixInfo.id_map.size();
+    const T initRank = 1.0 / N;
+    const T d = 0.85;
+    const T offset = (1 - d) / N;
+
+    Matrix<T> rank(N);
+    Matrix<T> prev_rank(N);
+    Matrix<T> ones(N);
+
+    for(int i = 0; i < N; i++) {
+        rank[i].push_back(initRank);
+        prev_rank[i].push_back(initRank);
+        ones[i].push_back(offset);
+    }
+
+    /*T sum_rank_diff = 1.0;
+    const T err = 1e-5;
+
+    for(int counter = 0; sum_rank_diff > err; counter++) {
+        sum_rank_diff = 0.0;
+        prev_rank = rank;
+        rank = matsum(matscale(matmul(M, prev_rank), d), ones);
+        sum_rank_diff = fabs(matsumel(rank) - matsumel(prev_rank));
+        std::cout << "[" << counter << "] ";
+        for(auto& el : rank) {
+            std::cout << el << "  ";
+        }
+        std::cout << std::endl;
+    }*/
 }

@@ -1,19 +1,19 @@
 #include "Parser.h"
 #include <fstream>
-#include <algorithm>
 
 
-std::unordered_map<unsigned int, Node*> Parser::getNodes(std::string path) {
-	std::unordered_map<unsigned int, Node*> nodes;
+template<class T>
+std::unordered_map<unsigned int, Node<T>*> Parser::getNodes(std::string path) {
+	std::unordered_map<unsigned int, Node<T>*> nodes;
 
 	std::ifstream file(path);
     std::string line;
 
     unsigned int tabloc;
     unsigned int from_id, to_id;
-    Node* from = nullptr;
-    Node* to = nullptr;
-    Node* prevfrom = nullptr;
+    Node<T>* from = nullptr;
+    Node<T>* to = nullptr;
+    Node<T>* prevfrom = nullptr;
 
     while(std::getline(file, line)) {
         if(line[0] == '#') continue;
@@ -28,7 +28,7 @@ std::unordered_map<unsigned int, Node*> Parser::getNodes(std::string path) {
                 from = res->second;
             }
             else {
-                from = new Node();
+                from = new Node<T>();
                 from->id = from_id;
                 nodes[from_id] = from;
             }
@@ -39,7 +39,7 @@ std::unordered_map<unsigned int, Node*> Parser::getNodes(std::string path) {
             to = res->second;
         }
         else {
-            to = new Node();
+            to = new Node<T>();
             to->id = to_id;
             nodes[to_id] = to;
         }
@@ -52,9 +52,9 @@ std::unordered_map<unsigned int, Node*> Parser::getNodes(std::string path) {
 	return nodes;
 }
 
-// template <class T>
-MatrixData Parser::getMatrix(std::string path) {
-    MatrixData ret;
+template <class T>
+MatrixData<T> Parser::getMatrix(std::string path) {
+    MatrixData<T> ret;
 
     std::ifstream file(path);
     std::string line;
@@ -106,17 +106,21 @@ MatrixData Parser::getMatrix(std::string path) {
         outbound[id_map[from_id]]++;
     }
 
-    // 
-    float mul = 1.0f;
+    // set initial M matrix values
+    T mul = 1.0;
     for(int i = 0; i < num_ids; i++) {
-        mul = 1.0f / std::count_if(matrix[i].begin(), matrix[i].end(), [](int i) { return i > 0; });
+        mul = 1.0 / outbound[i];
         for(int j = 0; j < num_ids; j++) {
-            matrix[i][j] *= mul;
+            matrix[j][i] *= mul;
         }
     }
 
     return ret;
 }
 
-// template std::vector<std::vector<float>> Parser::getMatrix(std::string path);
-// template std::vector<std::vector<double>> Parser::getMatrix(std::string path);
+
+template std::unordered_map<unsigned int, Node<float>*> Parser::getNodes(std::string path);
+template std::unordered_map<unsigned int, Node<double>*> Parser::getNodes(std::string path);
+
+template MatrixData<float> Parser::getMatrix(std::string path);
+template MatrixData<double> Parser::getMatrix(std::string path);
