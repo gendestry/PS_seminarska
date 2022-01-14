@@ -26,7 +26,7 @@ struct Node {
 template<class T>
 struct MatrixData {
     Matrix<T> matrix; // stores the M matrix
-    std::unordered_map<unsigned int, unsigned int> id_map; // id mappings <ID, arrayIndex>
+    std::unordered_map<unsigned int, int> id_map; // id mappings <ID, arrayIndex>
     std::vector<unsigned int> outbound; // num outbound connections
 };
 

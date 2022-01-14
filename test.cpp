@@ -10,31 +10,9 @@ template<typename T>
 void matrixIteration(std::string path);
 
 int main(int argc, char** argv) {
-    //graphIteration<double>("graph-test.txt");
     matrixIteration<double>("graph-test.txt");
-    // Matrix<float> id({ {1,0,0},{0,1,0}, {0,0,1} });
-    // Matrix<float> col({ {1},{2},{3} });
-    // std::cout << (id * col) << std::endl;
-    /*Matrix<float> a ( {
-        {1, 2},
-        {2, 3},
-        {3, 4}
-    } );
 
-    Matrix<float> b ({{1,0,0}, {0,1,0}});
-    Matrix<float> id({{1,0,0},{0,1,0}, {0,0,1}});
-    
-    // auto x = id.mul(a);
-    // id.scale(5.f);
-    id += id2;
-    id *= a;
-    id *= -1.0f;
-    std::cout << id;*/
 
-    /*Matrix<float> d ({{1,0},{0,0}});
-    Matrix<float> e ({{2,3},{4,5}});
-    auto f = ((d + e) * d) * 3;
-    std::cout << f; */
 
     return 0;
 }
@@ -88,16 +66,10 @@ void matrixIteration(std::string path) {
     const T d = 0.85;
     const T offset = (1 - d) / N;
 
-    Matrix<T> rank(N);
-    Matrix<T> prev_rank(N);
-    Matrix<T> ones(N);
+    Matrix<T> rank(N, 1, initRank);
+    Matrix<T> prev_rank(N, 1, initRank);
+    Matrix<T> ones(N, 1, offset);
 
-
-    for (int i = 0; i < N; i++) {
-        rank[i].push_back(initRank);
-        prev_rank[i].push_back(initRank);
-        ones[i].push_back(offset);
-    }
     T rankDiff = 1.0;
     const T err = 1e-5;
 
@@ -105,7 +77,7 @@ void matrixIteration(std::string path) {
         rankDiff = 1.0;
         prev_rank = rank;
         rank = ((M * prev_rank) * d) + ones;
-        rankDiff = (rank - prev_rank).abs().sumElements();
+        rankDiff = (rank - prev_rank).abs().sum();
         std::cout << "--- [" << counter << "] ---" << std::endl;
         std::cout << rank;
     }

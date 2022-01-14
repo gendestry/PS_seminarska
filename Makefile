@@ -2,10 +2,11 @@
 
 all: test
 
-test: test.cpp Parser.cpp Matrix.cpp
-	g++ Matrix.cpp Parser.cpp test.cpp -g --std=c++17 -o test
+test: Parser.cpp test.cpp
+	g++ Parser.cpp test.cpp -g --std=c++17 -o test
 
 rtest: test
+	# srun -n1 --reservation=fri test
 	./test
 
 clean:

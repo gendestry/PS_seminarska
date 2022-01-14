@@ -84,10 +84,11 @@ MatrixData<T> Parser::getMatrix(std::string path) {
     // do the parsing
     unsigned int tabloc;
     unsigned int from_id, to_id;
-    unsigned int yindex = 0;
+    int yindex = 0;
     unsigned int num_ids = id_map.size();
 
-    matrix.resize(num_ids);
+    matrix = Matrix<T>(num_ids, num_ids);
+    // matrix.resize(num_ids);
     outbound.resize(num_ids);
 
     while (std::getline(file, line)) {
@@ -98,11 +99,8 @@ MatrixData<T> Parser::getMatrix(std::string path) {
         to_id = atoi(line.substr(tabloc + 1).c_str());
 
         yindex = id_map[to_id];
-        if (matrix[yindex].size() == 0) {
-            matrix[yindex].resize(num_ids);
-        }
 
-        matrix[yindex][id_map[from_id]] = 1.0;
+        matrix[{yindex, id_map[from_id]}] = 1.0;
         outbound[id_map[from_id]]++;
     }
 
@@ -111,7 +109,7 @@ MatrixData<T> Parser::getMatrix(std::string path) {
     for (int i = 0; i < num_ids; i++) {
         mul = 1.0 / outbound[i];
         for (int j = 0; j < num_ids; j++) {
-            matrix[j][i] *= mul;
+            matrix[{j,i}] *= mul;
         }
     }
 
