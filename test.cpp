@@ -10,8 +10,11 @@ template<typename T>
 void matrixIteration(std::string path);
 
 int main(int argc, char** argv) {
-    graphIteration<float>("graph-test.txt");
+    //graphIteration<double>("graph-test.txt");
     matrixIteration<double>("graph-test.txt");
+    // Matrix<float> id({ {1,0,0},{0,1,0}, {0,0,1} });
+    // Matrix<float> col({ {1},{2},{3} });
+    // std::cout << (id * col) << std::endl;
     /*Matrix<float> a ( {
         {1, 2},
         {2, 3},
@@ -20,7 +23,7 @@ int main(int argc, char** argv) {
 
     Matrix<float> b ({{1,0,0}, {0,1,0}});
     Matrix<float> id({{1,0,0},{0,1,0}, {0,0,1}});
-    Matrix<float> id2({{1,0,0},{0,1,0}, {0,0,1}});
+    
     // auto x = id.mul(a);
     // id.scale(5.f);
     id += id2;
@@ -40,8 +43,8 @@ template<typename T>
 void graphIteration(std::string path) {
     auto nodes = Parser::getNodes<T>(path);
 
-    for(auto& [id, node] : nodes) {
-        std::cout << node << std::endl; 
+    for (auto& [id, node] : nodes) {
+        std::cout << node << std::endl;
     }
 
     // initial setup
@@ -50,7 +53,7 @@ void graphIteration(std::string path) {
     const T d = 0.85;
     const T offset = (1 - d) / N;
 
-    for(auto& [id, node] : nodes) {
+    for (auto& [id, node] : nodes) {
         node->rank = initRank;
         node->prev_rank = initRank;
     }
@@ -60,12 +63,12 @@ void graphIteration(std::string path) {
     T rankDiff = 1.0;
     const T err = 1e-5;
 
-    for(int counter = 0; rankDiff > err; counter++) {
+    for (int counter = 0; rankDiff > err; counter++) {
         rankDiff = 0.0;
-        for(auto& [id, node] : nodes) {
+        for (auto& [id, node] : nodes) {
             node->prev_rank = node->rank;
             temp = 0.0;
-            for(auto& child : node->links) {
+            for (auto& child : node->links) {
                 temp += child->prev_rank / child->out_count;
             }
             node->rank = offset + d * temp;
@@ -89,21 +92,21 @@ void matrixIteration(std::string path) {
     Matrix<T> prev_rank(N);
     Matrix<T> ones(N);
 
-    for(int i = 0; i < N; i++) {
+
+    for (int i = 0; i < N; i++) {
         rank[i].push_back(initRank);
         prev_rank[i].push_back(initRank);
         ones[i].push_back(offset);
     }
-
     T rankDiff = 1.0;
-    const T err = 1e-6;
+    const T err = 1e-5;
 
-    for(int counter = 0; rankDiff > err; counter++) {
+    for (int counter = 0; rankDiff > err; counter++) {
         rankDiff = 1.0;
         prev_rank = rank;
         rank = ((M * prev_rank) * d) + ones;
         rankDiff = (rank - prev_rank).abs().sumElements();
-        std::cout << "[" << counter << "]" << std::endl;
+        std::cout << "--- [" << counter << "] ---" << std::endl;
         std::cout << rank;
     }
 }

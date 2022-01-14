@@ -16,7 +16,7 @@ struct Node {
 
     friend std::ostream& operator<< (std::ostream& out, const Node* node) {
         out << node->id << "[" << node->out_count << "]\t";
-        for(auto& el : node->links) {
+        for (auto& el : node->links) {
             out << el->id << "  ";
         }
         return out;
@@ -33,11 +33,11 @@ struct MatrixData {
 
 class Parser {
 public:
-	Parser() = delete;
-	~Parser() = delete;
+    Parser() = delete;
+    ~Parser() = delete;
 
     template<class T>
-	static std::unordered_map<unsigned int, Node<T>*> getNodes(std::string path);
+    static std::unordered_map<unsigned int, Node<T>*> getNodes(std::string path);
 
     template<class T>
     static MatrixData<T> getMatrix(std::string path);
