@@ -1,4 +1,3 @@
-#include <math.h>
 #include "Parser.h"
 
 
@@ -27,7 +26,7 @@ void graphIteration(std::string path) {
 
     for (auto& [id, node] : nodes) {
         node->rank = initRank;
-        node->prev_rank = initRank;
+        node->prevRank = initRank;
     }
 
     // start iterating
@@ -36,15 +35,17 @@ void graphIteration(std::string path) {
     const T err = 1e-5;
 
     for (int counter = 0; rankDiff > err; counter++) {
+        for(auto& [id, node] : nodes)
+            node->prevRank = node->rank;
+
         rankDiff = 0.0;
         for (auto& [id, node] : nodes) {
-            node->prev_rank = node->rank;
             temp = 0.0;
             for (auto& child : node->links) {
-                temp += child->prev_rank / child->outCount;
+                temp += child->prevRank / child->outCount;
             }
             node->rank = offset + d * temp;
-            rankDiff += fabs(node->rank - node->prev_rank);
+            rankDiff += fabs(node->rank - node->prevRank);
             std::cout << "[" << counter << "] " << node->id << ": " << node->rank << std::endl;
         }
     }
@@ -61,19 +62,17 @@ void matrixIteration(std::string path) {
     const T offset = (1 - d) / N;
 
     Matrix<T> rank(N, 1, initRank);
-    Matrix<T> prev_rank(N, 1, initRank);
+    Matrix<T> prevRank(N, 1, initRank);
     Matrix<T> ones(N, 1, offset);
 
     T rankDiff = 1.0;
     const T err = 1e-5;
-    // tezava da prevrank use na enkrat nastavmo...
-    // pri grafu jih ne namrec
+
     for (int counter = 0; rankDiff > err; counter++) {
         rankDiff = 0.0;
-        prev_rank = rank;
-        rank = ((M * prev_rank) * d) + ones;
-        rankDiff = (rank - prev_rank).abs().sum();
+        prevRank = rank;
+        rank = ((M * prevRank) * d) + ones;
+        rankDiff = (rank - prevRank).abs().sum();
         std::cout << "--- [" << counter << "] ---" << std::endl << rank;
-        // std::cout << counter << ": " << rankDiff << std::endl;
     }
 }

@@ -11,7 +11,7 @@ struct Node {
     unsigned int id;
     unsigned int outCount;
     T rank = 0.0f;
-    T prev_rank = 0.0f;
+    T prevRank = 0.0f;
 
     std::vector<Node<T>*> links;
 
