@@ -5,17 +5,18 @@
 #include <unordered_map>
 #include "Matrix.h"
 
+// node class containing it's id, num of outbound connections and it's links
 template<class T>
 struct Node {
     unsigned int id;
-    unsigned int out_count;
+    unsigned int outCount;
     T rank = 0.0f;
     T prev_rank = 0.0f;
 
     std::vector<Node<T>*> links;
 
     friend std::ostream& operator<< (std::ostream& out, const Node* node) {
-        out << node->id << "[" << node->out_count << "]\t";
+        out << node->id << "[" << node->outCount << "]\t";
         for (auto& el : node->links) {
             out << el->id << "  ";
         }
@@ -26,7 +27,7 @@ struct Node {
 template<class T>
 struct MatrixData {
     Matrix<T> matrix; // stores the M matrix
-    std::unordered_map<unsigned int, int> id_map; // id mappings <ID, arrayIndex>
+    std::unordered_map<unsigned int, int> idMap; // id mappings <ID, arrayIndex>
     std::vector<unsigned int> outbound; // num outbound connections
 };
 
