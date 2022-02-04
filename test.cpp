@@ -46,8 +46,8 @@ void graphIteration(std::string path) {
             }
             node->rank = offset + d * temp;
             rankDiff += fabs(node->rank - node->prevRank);
-            std::cout << "[" << counter << "] " << node->id << ": " << node->rank << std::endl;
         }
+        std::cout << "[" << counter << "] " << rankDiff << std::endl;
     }
 }
 
@@ -73,6 +73,6 @@ void matrixIteration(std::string path) {
         prevRank = rank;
         rank = ((M * prevRank) * d) + ones;
         rankDiff = (rank - prevRank).abs().sum();
-        std::cout << "--- [" << counter << "] ---" << std::endl << rank;
+        std::cout << "[" << counter << "] " << rankDiff << std::endl;
     }
 }
