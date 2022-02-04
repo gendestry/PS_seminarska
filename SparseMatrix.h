@@ -49,9 +49,10 @@ public:
 		Matrix<T> ret(m_Rows, other.numCols());
 		
 		for(int i = 0; i < other.numCols(); i++) {
+			#pragma omp parallel for
 			for(int j = 0; j < m_Data.size(); j++) {
 				const SparseValue<T>& val = m_Data[j];
-
+				#pragma omp atomic
 				ret[{val.row, i}] += val.value * other[{val.col, i}];
 			}
 		}
