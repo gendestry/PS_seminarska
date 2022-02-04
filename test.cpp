@@ -6,19 +6,11 @@ template<typename T>
 void graphIteration(std::string path);
 
 template<typename T>
-void matrixIteration(std::string path);
+void sparseMatrixIteration(std::string path);
 
 int main(int argc, char** argv) {
-    // graphIteration<double>("graph-test.txt");
-    // matrixIteration<double>("graph-test.txt");
-
-    SparseMatrix<double> smat(3, 3);
-    Matrix<double> mat(3, 3, {1,2,3,4,5,6,7,8,9} );
-    smat.addElement({0,0, 1.0});
-    smat.addElement({2,2, 1.0});
-
-    auto res = smat * mat;
-    std::cout << res << std::endl;
+    // graphIteration<double>("graph-google.txt");
+    sparseMatrixIteration<double>("graph-google.txt");
 
     return 0;
 }
@@ -61,10 +53,9 @@ void graphIteration(std::string path) {
 }
 
 template<typename T>
-void matrixIteration(std::string path) {
-    auto matrixInfo = Parser::getMatrix<T>(path);
+void sparseMatrixIteration(std::string path) {
+    auto matrixInfo = Parser::getSparseMatrix<T>(path);
     auto& M = matrixInfo.matrix;
-
     const int N = matrixInfo.idMap.size();
     const T initRank = 1.0 / N;
     const T d = 0.85;

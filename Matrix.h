@@ -3,7 +3,10 @@
 #include <iostream>
 #include <math.h>
 
-#define ASSERT(cond, msg) if(cond) {throw msg;}
+#define S1(x) #x
+#define S2(x) S1(x)
+#define CONCAT(msg) __FILE__ " : " S2(__LINE__) " - " msg
+#define ASSERT(cond, msg) if(cond) {throw CONCAT(msg);}
 
 struct MatrixIndex {
 	int y;

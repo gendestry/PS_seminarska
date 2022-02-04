@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "Matrix.h"
+#include "SparseMatrix.h"
 
 // node class containing it's id, num of outbound connections and it's links
 template<class T>
@@ -25,12 +25,10 @@ struct Node {
 };
 
 template<class T>
-struct MatrixData {
-    Matrix<T> matrix; // stores the M matrix
+struct SparseMatrixData {
+    SparseMatrix<T> matrix; // stores the M matrix
     std::unordered_map<unsigned int, int> idMap; // id mappings <ID, arrayIndex>
-    std::vector<unsigned int> outbound; // num outbound connections
 };
-
 
 class Parser {
 public:
@@ -41,5 +39,5 @@ public:
     static std::unordered_map<unsigned int, Node<T>*> getNodes(std::string path);
 
     template<class T>
-    static MatrixData<T> getMatrix(std::string path);
+    static SparseMatrixData<T> getSparseMatrix(std::string path);
 };
