@@ -1,6 +1,5 @@
 #include "Parser.h"
-#include "Matrix.h"
-#include "SparseMatrix.h"
+#include "Timer.h"
 
 template<typename T>
 void graphIteration(std::string path);
@@ -9,7 +8,7 @@ template<typename T>
 void sparseMatrixIteration(std::string path);
 
 int main(int argc, char** argv) {
-    // graphIteration<double>("graph-google.txt");
+    graphIteration<double>("graph-google.txt");
     sparseMatrixIteration<double>("graph-google.txt");
 
     return 0;
@@ -18,6 +17,7 @@ int main(int argc, char** argv) {
 template<typename T>
 void graphIteration(std::string path) {
     auto nodes = Parser::getNodes<T>(path);
+    Timer t("Graph");
 
     // initial setup
     const int N = nodes.size();
@@ -48,13 +48,15 @@ void graphIteration(std::string path) {
             node->rank = offset + d * temp;
             rankDiff += fabs(node->rank - node->prevRank);
         }
-        std::cout << "[" << counter << "] " << rankDiff << std::endl;
+        //std::cout << "[" << counter << "] " << rankDiff << std::endl;
     }
 }
 
 template<typename T>
 void sparseMatrixIteration(std::string path) {
     auto matrixInfo = Parser::getSparseMatrix<T>(path);
+    Timer t("Matrix");
+
     auto& M = matrixInfo.matrix;
     const int N = matrixInfo.idMap.size();
     const T initRank = 1.0 / N;
@@ -73,6 +75,6 @@ void sparseMatrixIteration(std::string path) {
         prevRank = rank;
         rank = ((M * prevRank) * d) + ones;
         rankDiff = (rank - prevRank).abs().sum();
-        std::cout << "[" << counter << "] " << rankDiff << std::endl;
+        //std::cout << "[" << counter << "] " << rankDiff << std::endl;
     }
 }
