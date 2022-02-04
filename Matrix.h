@@ -163,6 +163,7 @@ public:
 
 	// PRINTING
 	friend std::ostream& operator<< (std::ostream& out, const Matrix& matrix) {
+		
 		for(int i = 0; i < matrix.numRows(); i++) {
 			for(int j = 0; j < matrix.numCols(); j++)
 				out << matrix[{i, j}] << "  ";
