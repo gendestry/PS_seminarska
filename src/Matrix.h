@@ -5,14 +5,16 @@
 
 #define S1(x) #x
 #define S2(x) S1(x)
-#define CONCAT(msg) __FILE__ " : " S2(__LINE__) " - " msg
-#define ASSERT(cond, msg) if(cond) {throw CONCAT(msg);}
+#define CONCAT(msg) (std::string(__FILE__) + "[" + S2(__LINE__) + "] in function: " + std::string(__PRETTY_FUNCTION__) + " => " + msg)
+#define ASSERT(cond, msg) if(cond) { throw CONCAT(msg); }
 
+// Used for indexing the matrix (swapping y and x would result in different matrix representation - column / row)
 struct MatrixIndex {
 	int y;
 	int x;
 };
 
+// Matrix class used for matrix calculations
 template<class T>
 class Matrix {
 private:
@@ -39,10 +41,12 @@ public:
 
 	~Matrix() = default;
 
+	// Some getters
 	inline unsigned int numRows() const noexcept { return m_Rows; }
 	inline unsigned int numCols() const noexcept { return m_Cols; }
 	inline unsigned int size() const noexcept { return m_Cols * m_Rows; }
 
+	// Basic arithmetic functions
 	T sum() const {
 		T ret = 0;
 		for (auto& el : m_Matrix)
@@ -101,8 +105,7 @@ public:
 		return *this;
 	}
 
-	// ARITHMETIC OPERATORS
-
+	// Basic arithmetic operators
 	Matrix operator+ (const Matrix& other) const {
 		Matrix mat(m_Rows, m_Cols, m_Matrix);
 		mat += other;
@@ -141,7 +144,7 @@ public:
 		return scale(scalar);
 	}
 
-	// INDEXING OPERATORS
+	// Indexing operators
 	T& operator[] (int index) {
 		ASSERT(index < 0 || index >= m_Matrix.size(), "Index out of bounds")
 		return m_Matrix[index];
@@ -164,9 +167,8 @@ public:
 		return m_Matrix[index];
 	}
 
-	// PRINTING
+	// Printing
 	friend std::ostream& operator<< (std::ostream& out, const Matrix& matrix) {
-		
 		for(int i = 0; i < matrix.numRows(); i++) {
 			for(int j = 0; j < matrix.numCols(); j++)
 				out << matrix[{i, j}] << "  ";

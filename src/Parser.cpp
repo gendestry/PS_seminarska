@@ -9,7 +9,7 @@ std::unordered_map<unsigned int, Node<T>*> Parser::getNodes(std::string path) {
     std::ifstream file(path);
     std::string line;
 
-    ASSERT(!file.is_open(), "[getNodes] file does not exist!")
+    ASSERT(!file.is_open(), "File does not exist!")
 
     unsigned int tabloc;
     unsigned int from_id, to_id;
@@ -64,7 +64,7 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
     std::ifstream file(path);
     std::string line;
 
-    ASSERT(!file.is_open(), "[getSparseMatrix] file does not exist!")
+    ASSERT(!file.is_open(), "File does not exist!")
 
     auto& matrix = ret.matrix; // the M matrix
     auto& idMap = ret.idMap; // map node ids <ID, arrayIndex> (used for indexing)
@@ -81,8 +81,10 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
     int prev_pos = 0;
     int i = 0;
     std::vector<SparseValue<T>> data;
+
     while (std::getline(file, line)) {
         if (line[0] == '#') continue;
+
         // Parse line
         tabloc = line.find('\t');
         from_id = atoi(line.substr(0, tabloc).c_str());
@@ -94,6 +96,7 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
                 idMap[from_id] = id++;
             }
         }
+
         if(idMap.find(to_id) == idMap.end()){
             idMap[to_id] = id++;
         }
@@ -104,6 +107,7 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
             for(int j = i-1; j >= prev_pos; j--){
                 data[j].value = 1.0/counter;
             }
+
             prev_pos = i;
             prev_id = from_id;
             counter = 0;
@@ -111,10 +115,13 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
         i++;
         counter++;
     }
+
     for(int j = i-1; j >= prev_pos; j--){
         data[j].value = 1.0/counter;
     }
-    ret.matrix = SparseMatrix<T>(id, id, data);
+
+    ret.matrix = SparseMatrix<T>(id, id, std::move(data));
+
     file.close();
     return ret;
 }

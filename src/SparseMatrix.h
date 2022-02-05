@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
+#include <iostream>
 #include "Matrix.h"
 
+// Data storage for the sparse matrix
 template<class T>
 struct SparseValue {
 	int row;
@@ -9,6 +11,7 @@ struct SparseValue {
 	T value;
 };
 
+// Sparse matrix implementation, works with the Matrix class (well the multiplication does.. :)
 template<class T>
 class SparseMatrix {
 	unsigned int m_Rows;
@@ -22,29 +25,21 @@ public:
 
 	}
 
-	SparseMatrix(unsigned int rows, unsigned int cols, const std::vector<SparseValue<T>>& data) : m_Rows(rows), m_Cols(cols), m_Data(data){
+	// Moves the data instead of copying it
+	SparseMatrix(unsigned int rows, unsigned int cols, std::vector<SparseValue<T>>&& data) : m_Rows(rows), m_Cols(cols), m_Data(std::move(data)){
 
 	}
 
+	
 	inline unsigned int numRows() const noexcept { return m_Rows; }
 	inline unsigned int numCols() const noexcept { return m_Cols; }
 
 	void addElement(SparseValue<T> val) {
-		ASSERT(val.row >= m_Rows || val.col >= m_Cols, "SparseMatrix: pushing out of bounds")
+		ASSERT(val.row >= m_Rows || val.col >= m_Cols, "Pushing out of bounds")
 		m_Data.push_back(val);
 	}
 
-	// INDEXING OPERATORS
-	SparseValue<T>& operator[] (int index) {
-		ASSERT(index < 0 || index >= m_Data.size(), "Index out of bounds")
-		return m_Data[index];
-	}
-
-	const SparseValue<T>& operator[] (int index) const {
-		ASSERT(index < 0 || index >= m_Data.size(), "Index out of bounds")
-		return m_Data[index];
-	}
-
+	// Basic arithmetic operators
 	Matrix<T> operator* (const Matrix<T>& other) const {
 		Matrix<T> ret(m_Rows, other.numCols());
 		
@@ -60,9 +55,19 @@ public:
 		return ret;
 	}
 
-	// PRINTING
-	friend std::ostream& operator<< (std::ostream& out, const SparseMatrix& matrix) {
+	// Indexing operators
+	SparseValue<T>& operator[] (int index) {
+		ASSERT(index < 0 || index >= m_Data.size(), "Index out of bounds")
+		return m_Data[index];
+	}
 
+	const SparseValue<T>& operator[] (int index) const {
+		ASSERT(index < 0 || index >= m_Data.size(), "Index out of bounds")
+		return m_Data[index];
+	}
+
+	// Printing
+	friend std::ostream& operator<< (std::ostream& out, const SparseMatrix& matrix) {
 		for(auto& s_value : matrix.m_Data) {
 			out << "(" << s_value.row << "," << s_value.col << "," << s_value.value << ")  ";
 		}

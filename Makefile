@@ -1,18 +1,32 @@
+N ?= 16
+
 .phony: clean
 
-all: test omp
+all: seq omp
 
-test: Parser.cpp test.cpp
-	g++ Parser.cpp test.cpp -g --std=c++17 -o test
+# release versions
+seq: src/Parser.cpp src/PageRank.cpp
+	g++ src/Parser.cpp src/PageRank.cpp -O3 --std=c++17 -o bin/PageRank
 
-run: test
-	srun -n1 --cpus-per-task=1 --reservation=fri ./test
+omp: src/Parser.cpp src/PageRank-OpenMP.cpp
+	g++ src/Parser.cpp src/PageRank-OpenMP.cpp -fopenmp -O3 --std=c++17 -o bin/PageRank-OpenMP
 
-omp: Parser.cpp PageRank_omp.cpp
-	g++ Parser.cpp PageRank_omp.cpp -fopenmp -g --std=c++17 -o omp
+
+# debug variants
+dseq: src/Parser.cpp src/PageRank.cpp
+	g++ src/Parser.cpp src/PageRank.cpp -g --std=c++17 -o bin/PageRank
+
+domp: src/Parser.cpp src/PageRank-OpenMP.cpp
+	g++ src/Parser.cpp src/PageRank-OpenMP.cpp -fopenmp -g --std=c++17 -o bin/PageRank-OpenMP
+
+
+# running
+run_seq: seq
+	srun -n1 --cpus-per-task=1 --reservation=fri bin/PageRank
 
 run_omp: omp
-	srun -n1 --cpus-per-task=$(N) --reservation=fri ./omp
+	srun -n1 --cpus-per-task=$(N) --reservation=fri bin/PageRank-OpenMP
 
+# clean
 clean:
-	rm test omp
+	rm bin/*
