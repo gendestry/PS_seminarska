@@ -35,8 +35,10 @@ public:
 	
 	Matrix(unsigned int rows, unsigned int cols, T value) : m_Rows(rows), m_Cols(cols) {
 		m_Matrix.resize(rows * cols);
-		for(auto& el : m_Matrix)
-			el = value;
+		#pragma omp parallel for schedule(guided)
+		for(int i = 0; i < m_Matrix.size(); i++){
+			m_Matrix[i] = value;
+		}
 	} 
 
 	~Matrix() = default;
@@ -49,15 +51,18 @@ public:
 	// Basic arithmetic functions
 	T sum() const {
 		T ret = 0;
-		for (auto& el : m_Matrix)
-			ret += el;
+		#pragma omp parallel for schedule(guided) reduction(+:ret)
+		for (int i = 0; i < m_Matrix.size(); i++){
+			ret += m_Matrix[i];
+		}
 		
 		return ret;
 	}
 
 	Matrix& add(const Matrix& other) {
 		ASSERT(m_Rows != other.numRows() || m_Cols != other.numCols(), "[add] incompatible sizes")
-		for(int i = 0; i < size(); i++) {
+		#pragma omp parallel for schedule(guided)
+		for(int i = 0; i < m_Matrix.size(); i++) {
 			m_Matrix[i] += other[i];
 		}
 
@@ -66,7 +71,8 @@ public:
 
 	Matrix& subtract(const Matrix& other) {
 		ASSERT(m_Rows != other.numRows() || m_Cols != other.numCols(), "[sub] incompatible sizes")
-		for(int i = 0; i < size(); i++) {
+		#pragma omp parallel for schedule(guided)
+		for(int i = 0; i < m_Matrix.size(); i++) {
 			m_Matrix[i] -= other[i];
 		}
 
@@ -78,6 +84,7 @@ public:
 
 		Matrix ret(m_Rows, other.numCols());
 
+		#pragma omp parallel for collapse(2) schedule(guided)
 		for(int i = 0; i < m_Rows; i++) {
 			for(int j = 0; j < other.numCols(); j++) {
 				T product = 0;
@@ -92,15 +99,19 @@ public:
 	}
 
 	Matrix& abs() noexcept {
-		for(auto& el : m_Matrix)
-			el = fabs(el);
+		#pragma omp parallel for schedule(guided)
+		for(int i = 0; i < m_Matrix.size(); i++) {
+			m_Matrix[i] = fabs(m_Matrix[i]);
+		}
 
 		return *this;
 	}
 	
 	Matrix& scale(T scalar) noexcept {
-		for(auto& el : m_Matrix)
-			el *= scalar;
+		#pragma omp parallel for schedule(guided)
+		for(int i = 0; i < m_Matrix.size(); i++) {
+			m_Matrix[i] *= scalar;
+		}
 		
 		return *this;
 	}
