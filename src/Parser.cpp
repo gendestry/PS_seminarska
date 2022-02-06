@@ -126,9 +126,88 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
 	return ret;
 }
 
+template <class T>
+SparseMatrixGPUData<T> Parser::getSparseMatrixGPU(std::string path, int pkglen) {
+	SparseMatrixGPUData<T> ret;
+	std::vector<int>& offsets = ret.offsets;
+
+	std::ifstream file(path);
+	std::string line;
+
+	ASSERT(!file.is_open(), "File does not exist!")
+
+	auto& matrix = ret.matrix; // the M matrix
+	auto& idMap = ret.idMap; // map node ids <ID, arrayIndex> (used for indexing)
+
+	// do the parsing
+	unsigned int tabloc;
+	unsigned int from_id, to_id;
+
+	// idMap counter
+	int id = 0;
+
+	int prev_id = -1;
+	int i = 0;
+	std::vector<SparseValue<T>> data;
+	std::vector<std::vector<SparseValue<T>>> rows;
+	std::vector<int> counts;
+	while (std::getline(file, line)) {
+		if (line[0] == '#') continue;
+
+		// Parse line
+		tabloc = line.find('\t');
+		from_id = atoi(line.substr(0, tabloc).c_str());
+		to_id = atoi(line.substr(tabloc + 1).c_str());
+
+		// Construct id_map
+		if(from_id != prev_id){
+			if(idMap.find(from_id) == idMap.end()){
+				idMap[from_id] = id++;
+				rows.push_back(std::vector<SparseValue<T>>());
+				counts.push_back(0);
+			}
+		}
+		if(idMap.find(to_id) == idMap.end()){
+			idMap[to_id] = id++;
+			rows.push_back(std::vector<SparseValue<T>>());
+			counts.push_back(0);
+		}
+
+		// Add elements
+		SparseValue<T> sv({idMap[to_id], idMap[from_id], -1.0});
+		rows[idMap[to_id]].push_back(sv);
+		i++;
+		counts[idMap[from_id]]++;
+	}
+	data.reserve(i);
+	offsets.push_back(0);
+	int offset = 0;
+	int lastOffset = 0;
+	for(auto& row : rows){
+		data.insert(data.end(), row.begin(), row.end());
+		offset += row.size();
+		if(offset > pkglen){
+			offsets.push_back(lastOffset + offset);
+			lastOffset += offset;
+			offset = 0;
+		}
+	}
+	if(offset > 0){
+		offsets.push_back(lastOffset + offset);
+	}
+	for(auto& el : data){
+		el.value = 1.0/counts[el.col];
+	}
+	ret.matrix = SparseMatrix<T>(id, id, std::move(data));
+	file.close();
+	return ret;
+}
 
 template std::unordered_map<unsigned int, Node<float>*> Parser::getNodes(std::string path);
 template std::unordered_map<unsigned int, Node<double>*> Parser::getNodes(std::string path);
 
 template SparseMatrixData<float> Parser::getSparseMatrix(std::string path);
 template SparseMatrixData<double> Parser::getSparseMatrix(std::string path);
+
+template SparseMatrixGPUData<float> Parser::getSparseMatrixGPU(std::string path, int pkglen);
+template SparseMatrixGPUData<double> Parser::getSparseMatrixGPU(std::string path, int pkglen);

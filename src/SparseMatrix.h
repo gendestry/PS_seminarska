@@ -30,7 +30,7 @@ public:
 
 	}
 
-	
+	inline std::vector<SparseValue<T>>& getData() noexcept { return m_Data; }
 	inline unsigned int numRows() const noexcept { return m_Rows; }
 	inline unsigned int numCols() const noexcept { return m_Cols; }
 
