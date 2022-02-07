@@ -1,6 +1,7 @@
 #pragma OPENCL EXTENSION cl_khr_fp64: enable
 #pragma OPENCL EXTENSION cl_khr_int64_base_atomics: enable
-void AtomicAdd(local double *val, double delta) {
+// Stackoverflow magic
+void AtomicAdd(global double *val, double delta) {
 	union {
 		double f;
 		ulong  i;
@@ -12,7 +13,7 @@ void AtomicAdd(local double *val, double delta) {
 	do {
 		old.f = *val;
 		new.f = old.f + delta;
-	} while (atom_cmpxchg ( (volatile local ulong *)val, old.i, new.i) != old.i);
+	} while (atom_cmpxchg ( (volatile global ulong *)val, old.i, new.i) != old.i);
 }
 
 typedef struct SparseValue{
@@ -21,46 +22,22 @@ typedef struct SparseValue{
 	double value;
 } SparseValue;
 
-kernel void matrix(global double* newRank, global double* oldRank, global SparseValue* sparseMatrix, global int* offsets, local double* ranks, double d, double offset) {
-	int id = get_local_id(0);
-	int gsize = get_local_size(0);
-	int gid = get_group_id(0);
-
-	int from = offsets[gid];
-	int to = offsets[gid+1];
-	for(int i = from + id; i < to; i += gsize) {
-		SparseValue sv = sparseMatrix[i];
-		//printf("%d %d %d %d %d\n", from, to, gid, id, i);
-		ranks[sv.row] = 0;
-		//newRank[sv.row] += sv.value * oldRank[sv.col];
-	}
-	work_group_barrier(CLK_LOCAL_MEM_FENCE);
-	for(int i = from + id; i < to; i += gsize) {
-		SparseValue sv = sparseMatrix[i];
-		//printf("%d, %f %f %f\n", sv.row, sv.value * oldRank[sv.col], sv.value, oldRank[sv.col]);
-		AtomicAdd(&ranks[sv.row], sv.value * oldRank[sv.col]);
-		//newRank[sv.row] += sv.value * oldRank[sv.col];
-	}
-	work_group_barrier(CLK_LOCAL_MEM_FENCE);
-	if(id == 0) {
-		int prev = -1;
-		for(int i = from; i < to; i++) {
-			//printf("%d, %f\n", i, ranks[i]);
-			int row = sparseMatrix[i].row;
-			newRank[row] = ranks[row]*d + offset;
-		}
+// Sparse matrix multiplication
+kernel void matrix(global double* newRank, global double* oldRank, global SparseValue* sparseMatrix, int O) {
+	int id = get_global_id(0);
+	if(id < O){
+		SparseValue sv = sparseMatrix[id];
+		AtomicAdd(&newRank[sv.row], sv.value * oldRank[sv.col]);
 	}
 }
 
-kernel void matrixUpdateRank(global double* newRank, global double* oldRank, int rankLength, global double* rankDiff) {
+// Update ranks, calculate difference
+kernel void matrixUpdateRank(global double* newRank, global double* oldRank, int rankLength, double d, double offset, global double* rankDiff) {
 	int id = get_global_id(0);
 	if(id < rankLength) {
-		//rankDiff += abs_diff(oldRank[id]-newRank[id]);
-		//oldRank[id] = newRank[id]*d + offset;
-		rankDiff[id] = fabs(oldRank[id]-newRank[id]);
-		oldRank[id] = newRank[id];
-		printf("%d %f\n", id, oldRank[id]);
-		//printf("%d, %f\n", id, rankDiff[id]);
+		double oldOldRank = oldRank[id];
+		oldRank[id] = newRank[id]*d + offset;
+		rankDiff[id] = fabs(oldRank[id]-oldOldRank);
 		newRank[id] = 0;
 	}
 }
@@ -99,8 +76,3 @@ kernel void rankDiffReduction(global double* rankDiff, int N, global double* par
 		partials[get_group_id(0)] = diff[0];
 	}
 }
-
-
-/*kernel void graph(global unsigned int* buffer) {
-
-}*/

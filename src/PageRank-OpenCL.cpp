@@ -8,23 +8,19 @@ template<typename T>
 void sparseMatrixIteration(std::string path);
 
 int main(int argc, char** argv) {
-	sparseMatrixIteration<double>("graph-test2.txt");
+	sparseMatrixIteration<double>("graph-google.txt");
 }
 
-#define WORKGROUP_SIZE 2
+#define WORKGROUP_SIZE 128
 template<typename T>
 void sparseMatrixIteration(std::string path) {
-	auto matrixInfo = Parser::getSparseMatrixGPU<T>(path, WORKGROUP_SIZE);
+	auto matrixInfo = Parser::getSparseMatrix<T>(path);
 	auto& M = matrixInfo.matrix;
-	auto& offsets = matrixInfo.offsets;
-	for(int i = 0; i < offsets.size(); i++)printf("%d ", offsets[i]);
-	printf("\n");
 	const int N = matrixInfo.idMap.size();
 	const T initRank = 1.0 / N;
 	const T d = 0.85;
 	const T offset = (1 - d) / N;
 	const int O = M.getData().size();
-	const int numOffsets = offsets.size();
 
 	// Getting platforms
 	std::vector<cl::Platform> all_platforms;
@@ -50,7 +46,6 @@ void sparseMatrixIteration(std::string path) {
 		cl::Buffer newRank(context, CL_MEM_READ_WRITE, N*sizeof(double));
 		cl::Buffer oldRank(context, CL_MEM_READ_WRITE, N*sizeof(double));
 		cl::Buffer matrix(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, O*sizeof(SparseValue<double>), M.getData().data());
-		cl::Buffer offsetBuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, numOffsets*sizeof(int), offsets.data());
 		cl::Buffer rankDiffBuf(context, CL_MEM_READ_WRITE, N*sizeof(double));
 		cl::Buffer partials(context, CL_MEM_READ_WRITE, numGroups*sizeof(double));
 		// Create queue to which we will push commands for the device.
@@ -60,23 +55,22 @@ void sparseMatrixIteration(std::string path) {
 		ret |= matrixKernel.setArg(0, newRank);
 		ret |= matrixKernel.setArg(1, oldRank);
 		ret |= matrixKernel.setArg(2, matrix);
-		ret |= matrixKernel.setArg(3, offsetBuf);
-		ret |= matrixKernel.setArg(4, N*sizeof(double), NULL);
-		ret |= matrixKernel.setArg(5, d);
-		ret |= matrixKernel.setArg(6, offset);
+		ret |= matrixKernel.setArg(3, O);
 
 		cl::Kernel matrixUpdateKernel(program, "matrixUpdateRank");
 		ret |= matrixUpdateKernel.setArg(0, newRank);
 		ret |= matrixUpdateKernel.setArg(1, oldRank);
 		ret |= matrixUpdateKernel.setArg(2, N);
-		ret |= matrixUpdateKernel.setArg(3, rankDiffBuf);
+		ret |= matrixUpdateKernel.setArg(3, d);
+		ret |= matrixUpdateKernel.setArg(4, offset);
+		ret |= matrixUpdateKernel.setArg(5, rankDiffBuf);
 
 		cl::Kernel reductionKernel(program, "rankDiffReduction");
 		ret |= reductionKernel.setArg(0, rankDiffBuf);
 		ret |= reductionKernel.setArg(1, N);
 		ret |= reductionKernel.setArg(2, partials);
 		ret |= reductionKernel.setArg(3, WORKGROUP_SIZE*sizeof(double), NULL);
-		unsigned int globalSize = (numOffsets-1) * WORKGROUP_SIZE;
+		unsigned int globalSize = ((unsigned int)((O - 1) / WORKGROUP_SIZE) + 1) * WORKGROUP_SIZE;
 		unsigned int globalSizeUpdate = numGroups * WORKGROUP_SIZE;
 
 		std::vector<double> nrank(N, 0);
@@ -86,7 +80,7 @@ void sparseMatrixIteration(std::string path) {
 		ret |= queue.enqueueWriteBuffer(newRank, CL_TRUE, 0, N*sizeof(double), nrank.data());
 		// Run the kernel
 		double* diff = new double[numGroups];
-		double* ranks = new double[N];
+		//double* ranks = new double[N];
 		double rankDiff = 1;
 		const T err = 1e-5;
 		for (int counter = 0; rankDiff > err; counter++) {
@@ -95,13 +89,12 @@ void sparseMatrixIteration(std::string path) {
 			ret |= queue.enqueueNDRangeKernel(reductionKernel, cl::NullRange, cl::NDRange(globalSizeUpdate), cl::NDRange(WORKGROUP_SIZE));
 			//ret |= queue.enqueueReadBuffer(oldRank, CL_TRUE, 0, N*sizeof(double), ranks);
 			ret |= queue.enqueueReadBuffer(partials, CL_TRUE, 0, numGroups*sizeof(double), diff);
-			//for(int i = 0; i < N; i++) printf("%f\n", ranks[i]);
+			//for(int i = 0; i < N; i++) printf("%f\n", i, ranks[i]);
 			rankDiff = 0;
 			for(int i = 0; i < numGroups; i++){
 				rankDiff += diff[i];
 			}
-			std::cout << "[" << counter << "] " << rankDiff << std::endl;
-			//break;
+			//std::cout << "[" << counter << "] " << rankDiff << std::endl;
 		}
 		queue.finish();
 	}catch(std::string msg){
