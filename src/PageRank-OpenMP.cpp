@@ -17,7 +17,9 @@ int main(int argc, char** argv) {
 
 template<typename T>
 void graphIteration(std::string path) {
-	auto nodes = Parser::getNodes<T>(path);
+	NodesData<T> nodesData = Parser::getNodes<T>(path);
+	auto& nodes = nodesData.nodes;
+	std::vector<int> keys = nodesData.keys;
 	Timer t("Graph");
 
 	// initial setup
@@ -26,12 +28,11 @@ void graphIteration(std::string path) {
 	const T d = 0.85;
 	const T offset = (1 - d) / N;
 
-	std::vector<unsigned int> keys(nodes.size());
 	int count = 0;
-	for (auto& [id, node] : nodes) {
-		keys[count++] = id;
-		node->rank = initRank;
-		node->prevRank = initRank;
+	#pragma omp parallel for
+	for(int i = 0; i < keys.size(); i++) {
+		nodes[keys[i]]->rank = initRank;
+		nodes[keys[i]]->prevRank = initRank;
 	}
 
 	// start iterating
@@ -49,9 +50,10 @@ void graphIteration(std::string path) {
 		rankDiff = 0.0;
 		#pragma omp parallel for reduction(+:rankDiff) private(temp)
 		for (int i = 0; i < keys.size(); i++) {
-			auto node = nodes[keys[i]];
+			Node<T>* node = nodes[keys[i]];
 			temp = 0.0;
-			for (auto& child : node->links) {
+			for(int j = 0; j < node->links.size(); j++) {
+				Node<T>* child = node->links[j];
 				temp += child->prevRank / child->outCount;
 			}
 			node->rank = offset + d * temp;

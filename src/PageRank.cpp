@@ -16,7 +16,8 @@ int main(int argc, char** argv) {
 
 template<typename T>
 void graphIteration(std::string path) {
-	auto nodes = Parser::getNodes<T>(path);
+	NodesData<T> nodesData = Parser::getNodes<T>(path);
+	auto& nodes = nodesData.nodes;
 	Timer t("Graph");
 
 	// initial setup

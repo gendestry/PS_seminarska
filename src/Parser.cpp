@@ -3,9 +3,10 @@
 
 
 template<class T>
-std::unordered_map<unsigned int, Node<T>*> Parser::getNodes(std::string path) {
-	std::unordered_map<unsigned int, Node<T>*> nodes;
-
+NodesData<T> Parser::getNodes(std::string path) {
+	NodesData<T> data;
+	auto& nodes = data.nodes;
+	std::vector<int>& idMap = data.keys;
 	std::ifstream file(path);
 	std::string line;
 
@@ -34,6 +35,7 @@ std::unordered_map<unsigned int, Node<T>*> Parser::getNodes(std::string path) {
 				from = new Node<T>();
 				from->id = from_id;
 				nodes[from_id] = from;
+				idMap.push_back(from_id);
 			}
 		}
 
@@ -46,6 +48,7 @@ std::unordered_map<unsigned int, Node<T>*> Parser::getNodes(std::string path) {
 			to = new Node<T>();
 			to->id = to_id;
 			nodes[to_id] = to;
+			idMap.push_back(to_id);
 		}
 
 		// append the "from" node to "to" node's children and increase the outbound connection count of "from" node
@@ -54,7 +57,7 @@ std::unordered_map<unsigned int, Node<T>*> Parser::getNodes(std::string path) {
 	}
 
 	file.close();
-	return nodes;
+	return data;
 }
 
 template <class T>
@@ -126,8 +129,8 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
 	return ret;
 }
 
-template std::unordered_map<unsigned int, Node<float>*> Parser::getNodes(std::string path);
-template std::unordered_map<unsigned int, Node<double>*> Parser::getNodes(std::string path);
+template NodesData<float> Parser::getNodes(std::string path);
+template NodesData<double> Parser::getNodes(std::string path);
 
 template SparseMatrixData<float> Parser::getSparseMatrix(std::string path);
 template SparseMatrixData<double> Parser::getSparseMatrix(std::string path);

@@ -4,8 +4,13 @@
 #include "Node.h"
 #include "SparseMatrix.h"
 
-
 // Data that will be returned by the parser
+template<class T>
+struct NodesData {
+	std::unordered_map<unsigned int, Node<T>*> nodes;
+	std::vector<int> keys;
+};
+
 template<class T>
 struct SparseMatrixData {
 	SparseMatrix<T> matrix; // stores the M matrix
@@ -19,7 +24,7 @@ public:
 	~Parser() = delete;
 
 	template<class T>
-	static std::unordered_map<unsigned int, Node<T>*> getNodes(std::string path);
+	static NodesData<T> getNodes(std::string path);
 
 	template<class T>
 	static SparseMatrixData<T> getSparseMatrix(std::string path);
