@@ -5,15 +5,18 @@
 
 std::string getShaderSource(std::string path);
 template<typename T>
-void sparseMatrixIteration(std::string path);
+void sparseMatrixIteration(std::string path, int wgSize);
 
 int main(int argc, char** argv) {
-	sparseMatrixIteration<double>("graph-google.txt");
+	int workgroupSize = 128;
+	if(argc > 1){
+		workgroupSize = atoi(argv[1]);
+	}
+	sparseMatrixIteration<double>("graph-google.txt", workgroupSize);
 }
 
-#define WORKGROUP_SIZE 128
 template<typename T>
-void sparseMatrixIteration(std::string path) {
+void sparseMatrixIteration(std::string path, int workgroupSize) {
 	auto matrixInfo = Parser::getSparseMatrix<T>(path);
 	auto& M = matrixInfo.matrix;
 	const int N = matrixInfo.idMap.size();
@@ -35,7 +38,7 @@ void sparseMatrixIteration(std::string path) {
 
 	// Creating program
 	try{
-		unsigned int numGroups = ((unsigned int)((N - 1) / WORKGROUP_SIZE) + 1);
+		unsigned int numGroups = ((unsigned int)((N - 1) / workgroupSize) + 1);
 
 		std::string kernel_code = getShaderSource("src/shader.cl");
 		cl::Program::Sources sources(1, {kernel_code.c_str(), kernel_code.length()});
@@ -69,9 +72,9 @@ void sparseMatrixIteration(std::string path) {
 		ret |= reductionKernel.setArg(0, rankDiffBuf);
 		ret |= reductionKernel.setArg(1, N);
 		ret |= reductionKernel.setArg(2, partials);
-		ret |= reductionKernel.setArg(3, WORKGROUP_SIZE*sizeof(double), NULL);
-		unsigned int globalSize = ((unsigned int)((O - 1) / WORKGROUP_SIZE) + 1) * WORKGROUP_SIZE;
-		unsigned int globalSizeUpdate = numGroups * WORKGROUP_SIZE;
+		ret |= reductionKernel.setArg(3, workgroupSize*sizeof(double), NULL);
+		unsigned int globalSize = ((unsigned int)((O - 1) / workgroupSize) + 1) * workgroupSize;
+		unsigned int globalSizeUpdate = numGroups * workgroupSize;
 
 		std::vector<double> nrank(N, 0);
 		std::vector<double> rank(N, initRank);
@@ -84,9 +87,9 @@ void sparseMatrixIteration(std::string path) {
 		double rankDiff = 1;
 		const T err = 1e-5;
 		for (int counter = 0; rankDiff > err; counter++) {
-			ret |= queue.enqueueNDRangeKernel(matrixKernel, cl::NullRange, cl::NDRange(globalSize), cl::NDRange(WORKGROUP_SIZE));
-			ret |= queue.enqueueNDRangeKernel(matrixUpdateKernel, cl::NullRange, cl::NDRange(globalSizeUpdate), cl::NDRange(WORKGROUP_SIZE));
-			ret |= queue.enqueueNDRangeKernel(reductionKernel, cl::NullRange, cl::NDRange(globalSizeUpdate), cl::NDRange(WORKGROUP_SIZE));
+			ret |= queue.enqueueNDRangeKernel(matrixKernel, cl::NullRange, cl::NDRange(globalSize), cl::NDRange(workgroupSize));
+			ret |= queue.enqueueNDRangeKernel(matrixUpdateKernel, cl::NullRange, cl::NDRange(globalSizeUpdate), cl::NDRange(workgroupSize));
+			ret |= queue.enqueueNDRangeKernel(reductionKernel, cl::NullRange, cl::NDRange(globalSizeUpdate), cl::NDRange(workgroupSize));
 			//ret |= queue.enqueueReadBuffer(oldRank, CL_TRUE, 0, N*sizeof(double), ranks);
 			ret |= queue.enqueueReadBuffer(partials, CL_TRUE, 0, numGroups*sizeof(double), diff);
 			//for(int i = 0; i < N; i++) printf("%f\n", i, ranks[i]);
