@@ -12,13 +12,6 @@ struct SparseMatrixData {
 	std::unordered_map<unsigned int, int> idMap; // id mappings <ID, arrayIndex>
 };
 
-template<class T>
-struct SparseMatrixGPUData {
-	SparseMatrix<T> matrix; // stores the M matrix
-	std::vector<int> offsets;
-	std::unordered_map<unsigned int, int> idMap; // id mappings <ID, arrayIndex>
-};
-
 // Parser class used for reading and parsing the graph
 class Parser {
 public:
@@ -30,7 +23,4 @@ public:
 
 	template<class T>
 	static SparseMatrixData<T> getSparseMatrix(std::string path);
-
-	template<class T>
-	static SparseMatrixGPUData<T> getSparseMatrixGPU(std::string path, int pkglen);
 };
