@@ -1,29 +1,35 @@
-N ?= 16
-
 .phony: clean
 
 all: seq omp ocl
 
+seq: bin/PageRank
+omp: bin/PageRank-OpenMP
+ocl: bin/PageRank-OpenCL
+
+dseq: bin/PageRank-d
+domp: bin/PageRank-OpenMP-d
+docl: bin/PageRank-OpenCL-d
+
 # release versions
-seq: src/Parser.cpp src/PageRank.cpp
-	g++ src/Parser.cpp src/PageRank.cpp -O3 --std=c++17 -o bin/PageRank
+bin/PageRank: src/Parser.cpp src/PageRank.cpp
+	g++ $^ -O3 --std=c++17 -o $@
 
-omp: src/Parser.cpp src/PageRank-OpenMP.cpp
-	g++ src/Parser.cpp src/PageRank-OpenMP.cpp -fopenmp -O3 --std=c++17 -o bin/PageRank-OpenMP
+bin/PageRank-OpenMP: src/Parser.cpp src/PageRank-OpenMP.cpp
+	g++ $^ -fopenmp -O3 --std=c++17 -o $@
 
-ocl: src/Parser.cpp src/PageRank-OpenCL.cpp
-	g++ src/Parser.cpp src/PageRank-OpenCL.cpp -lOpenCL -O3 --std=c++17 -o bin/PageRank-OpenCL
+bin/PageRank-OpenCL: src/Parser.cpp src/PageRank-OpenCL.cpp
+	g++ $^ -lOpenCL -O3 --std=c++17 -o $@
 
 
 # debug variants
-dseq: src/Parser.cpp src/PageRank.cpp
-	g++ src/Parser.cpp src/PageRank.cpp -g --std=c++17 -o bin/PageRank
+bin/PageRank-d: src/Parser.cpp src/PageRank.cpp
+	g++ $^ -g --std=c++17 -o $@
 
-domp: src/Parser.cpp src/PageRank-OpenMP.cpp
-	g++ src/Parser.cpp src/PageRank-OpenMP.cpp -fopenmp -g --std=c++17 -o bin/PageRank-OpenMP
+bin/PageRank-OpenMP-d: src/Parser.cpp src/PageRank-OpenMP.cpp
+	g++ $^ -fopenmp -g --std=c++17 -o $@
 
-docl: src/Parser.cpp src/PageRank-OpenCL.cpp
-	g++ src/Parser.cpp src/PageRank-OpenCL.cpp -lOpenCL -g --std=c++17 -o bin/PageRank-OpenCL
+bin/PageRank-OpenCL-d: src/Parser.cpp src/PageRank-OpenCL.cpp
+	g++ $^ -lOpenCL -g --std=c++17 -o $@
 
 
 # running
