@@ -3,20 +3,34 @@
 #include "Timer.h"
 
 template<typename T>
-void graphIteration(std::string path);
+void graphIteration(std::string path, double error);
 
 template<typename T>
-void sparseMatrixIteration(std::string path);
+void sparseMatrixIteration(std::string path, double error);
 
 int main(int argc, char** argv) {
-	graphIteration<double>("graph-google.txt");
-	sparseMatrixIteration<double>("graph-google.txt");
+	double error = 1e-5;
+	int datatype = 1; // 0 = float, 1 = double
+	int itertype = 1; // 0 = graph, 1 = matrix
+
+	if(argc > 3) {
+		error = atof(argv[1]);
+		datatype = atoi(argv[2]);
+		itertype = atoi(argv[3]);
+	}
+
+	if(datatype == 0) {
+		itertype == 0 ? graphIteration<float>("graph-google.txt", error) : sparseMatrixIteration<float>("graph-google.txt", error);
+	}
+	else {
+		itertype == 0 ? graphIteration<double>("graph-google.txt", error) : sparseMatrixIteration<double>("graph-google.txt", error);
+	}
 
 	return 0;
 }
 
 template<typename T>
-void graphIteration(std::string path) {
+void graphIteration(std::string path, double err) {
 	NodesData<T> nodesData = Parser::getNodes<T>(path);
 	auto& nodes = nodesData.nodes;
 	std::vector<int> keys = nodesData.keys;
@@ -38,7 +52,6 @@ void graphIteration(std::string path) {
 	// start iterating
 	T temp;
 	T rankDiff = 1.0;
-	const T err = 1e-5;
 
 	for (int counter = 0; rankDiff > err; counter++) {
 		#pragma omp parallel for
@@ -72,7 +85,7 @@ void graphIteration(std::string path) {
 }
 
 template<typename T>
-void sparseMatrixIteration(std::string path) {
+void sparseMatrixIteration(std::string path, double err) {
 	auto matrixInfo = Parser::getSparseMatrix<T>(path);
 	auto& M = matrixInfo.matrix;
 	Timer t("Matrix");
@@ -87,7 +100,6 @@ void sparseMatrixIteration(std::string path) {
 	Matrix<T> ones(N, 1, offset);
 
 	T rankDiff = 1.0;
-	const T err = 1e-5;
 
 	for (int counter = 0; rankDiff > err; counter++) {
 		rankDiff = 0.0;
