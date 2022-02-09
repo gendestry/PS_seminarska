@@ -1,3 +1,8 @@
+// check to see the type
+#ifndef TYPE
+	#define TYPE double
+#endif
+
 #pragma OPENCL EXTENSION cl_khr_fp64: enable
 #pragma OPENCL EXTENSION cl_khr_int64_base_atomics: enable
 // Stackoverflow magic

@@ -1,9 +1,9 @@
 #include "Parser.h"
 #include "Timer.h"
 #include <fstream>
+#include <typeinfo>
 #include <CL/cl.hpp>
 
-std::string getShaderSource(std::string path);
 
 template<typename T>
 void sparseMatrixIteration(std::string path, int wgSize, double error);
@@ -12,7 +12,6 @@ int main(int argc, char** argv) {
 	double error = 1e-5;
 	int datatype = 1; // 0 = float, 1 = double
 	int workgroupSize = 128;
-
 	if(argc > 3) {
 		error = atof(argv[1]);
 		datatype = atoi(argv[2]);
@@ -46,8 +45,14 @@ void sparseMatrixIteration(std::string path, int workgroupSize, double err) {
 	// Creating program
 	try{
 		unsigned int numGroups = ((unsigned int)((N - 1) / workgroupSize) + 1);
+		
+		std::ifstream in(path);
+		ASSERT(!in.is_open(), "File not found");
+		std::string kernel_code = std::string(std::istreambuf_iterator<char>(in), (std::istreambuf_iterator<char>())); //getShaderSource("src/shader.cl");
+		std::string prepend = typeid(T).name()[0] == 'd' ? "#define TYPE double\n" : "#define TYPE float\n";
+		kernel_code.insert(0, prepend);
+		in.close();
 
-		std::string kernel_code = getShaderSource("src/shader.cl");
 		cl::Program::Sources sources(1, {kernel_code.c_str(), kernel_code.length()});
 		cl::Program program(context, sources);
 		ASSERT(program.build({device}) != CL_SUCCESS, program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device))
@@ -116,10 +121,4 @@ void sparseMatrixIteration(std::string path, int workgroupSize, double err) {
 	}catch(std::string msg){
 		std::cout << msg << std::endl;
 	}
-}
-
-std::string getShaderSource(std::string path) {
-	std::ifstream in(path);
-	ASSERT(!in.is_open(), "File not found");
-	return std::string(std::istreambuf_iterator<char>(in), (std::istreambuf_iterator<char>()));
 }
