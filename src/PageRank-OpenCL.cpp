@@ -46,10 +46,10 @@ void sparseMatrixIteration(std::string path, int workgroupSize, double err) {
 	try{
 		unsigned int numGroups = ((unsigned int)((N - 1) / workgroupSize) + 1);
 		
-		std::ifstream in(path);
+		std::ifstream in("src/shader.cl");
 		ASSERT(!in.is_open(), "File not found");
 		std::string kernel_code = std::string(std::istreambuf_iterator<char>(in), (std::istreambuf_iterator<char>())); //getShaderSource("src/shader.cl");
-		std::string prepend = typeid(T).name()[0] == 'd' ? "#define TYPE double\n" : "#define TYPE float\n";
+		std::string prepend = typeid(T).name()[0] == 'd' ? "#define USE_DOUBLE 1\n" : "#define USE_DOUBLE 0\n";
 		kernel_code.insert(0, prepend);
 		in.close();
 
@@ -59,11 +59,11 @@ void sparseMatrixIteration(std::string path, int workgroupSize, double err) {
 		int ret = program.build({device});
 
 		// Create buffers on the device
-		cl::Buffer newRank(context, CL_MEM_READ_WRITE, N*sizeof(double));
-		cl::Buffer oldRank(context, CL_MEM_READ_WRITE, N*sizeof(double));
-		cl::Buffer matrix(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, O*sizeof(SparseValue<double>), M.getData().data());
-		cl::Buffer rankDiffBuf(context, CL_MEM_READ_WRITE, N*sizeof(double));
-		cl::Buffer partials(context, CL_MEM_READ_WRITE, numGroups*sizeof(double));
+		cl::Buffer newRank(context, CL_MEM_READ_WRITE, N*sizeof(T));
+		cl::Buffer oldRank(context, CL_MEM_READ_WRITE, N*sizeof(T));
+		cl::Buffer matrix(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, O*sizeof(SparseValue<T>), M.getData().data());
+		cl::Buffer rankDiffBuf(context, CL_MEM_READ_WRITE, N*sizeof(T));
+		cl::Buffer partials(context, CL_MEM_READ_WRITE, numGroups*sizeof(T));
 
 		// Create queue to which we will push commands for the device.
 		cl::CommandQueue queue(context, device);

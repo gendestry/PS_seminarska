@@ -1,34 +1,56 @@
 // check to see the type
-#ifndef TYPE
-	#define TYPE double
+#ifndef USE_DOUBLE
+	#define USE_DOUBLE 1
 #endif
 
-#pragma OPENCL EXTENSION cl_khr_fp64: enable
-#pragma OPENCL EXTENSION cl_khr_int64_base_atomics: enable
-// Stackoverflow magic
-void AtomicAdd(global double *val, double delta) {
-	union {
-		double f;
-		ulong  i;
-	} old;
-	union {
-		double f;
-		ulong  i;
-	} new;
-	do {
-		old.f = *val;
-		new.f = old.f + delta;
-	} while (atom_cmpxchg ( (volatile global ulong *)val, old.i, new.i) != old.i);
-}
+#if USE_DOUBLE == 0
+	#define TYPE float
+#else
+	#define TYPE double
+	#pragma OPENCL EXTENSION cl_khr_fp64: enable
+	#pragma OPENCL EXTENSION cl_khr_int64_base_atomics: enable
+#endif
 
+// Stackoverflow magic
+#if USE_DOUBLE == 1
+	void AtomicAdd(global double *val, double delta) {
+		union {
+			double f;
+			ulong  i;
+		} old;
+		union {
+			double f;
+			ulong  i;
+		} new;
+		do {
+			old.f = *val;
+			new.f = old.f + delta;
+		} while (atom_cmpxchg ( (volatile global ulong *)val, old.i, new.i) != old.i);
+	}
+#else
+	void AtomicAdd(volatile global float* val, const float delta) {
+		union {
+			float f;
+			uint  i;
+		} old;
+		union {
+			float f;
+			uint  i;
+		} new;
+		do {
+			old.f = *val;
+			new.f = old.f + delta;
+		} while (atom_cmpxchg ( (volatile global uint *)val, old.i, new.i) != old.i);
+	}
+#endif
 typedef struct SparseValue{
 	int row;
 	int col;
-	double value;
+	TYPE value;
 } SparseValue;
 
 // Sparse matrix multiplication
-kernel void matrix(global double* newRank, global double* oldRank, global SparseValue* sparseMatrix, int O) {
+kernel void matrix(global TYPE* newRank, global TYPE* oldRank, global SparseValue* sparseMatrix, int O) {
 	int id = get_global_id(0);
 	if(id < O){
 		SparseValue sv = sparseMatrix[id];
@@ -37,17 +59,17 @@ kernel void matrix(global double* newRank, global double* oldRank, global Sparse
 }
 
 // Update ranks, calculate difference
-kernel void matrixUpdateRank(global double* newRank, global double* oldRank, int rankLength, double d, double offset, global double* rankDiff) {
+kernel void matrixUpdateRank(global TYPE* newRank, global TYPE* oldRank, int rankLength, TYPE d, TYPE offset, global TYPE* rankDiff) {
 	int id = get_global_id(0);
 	if(id < rankLength) {
-		double oldOldRank = oldRank[id];
+		TYPE oldOldRank = oldRank[id];
 		oldRank[id] = newRank[id]*d + offset;
 		rankDiff[id] = fabs(oldRank[id]-oldOldRank);
 		newRank[id] = 0;
 	}
 }
 
-kernel void rankDiffReduction(global double* rankDiff, int N, global double* partials, local double* diff) {
+kernel void rankDiffReduction(global TYPE* rankDiff, int N, global TYPE* partials, local TYPE* diff) {
 	int id = get_global_id(0);
 	int lid = get_local_id(0);
 	int gid = get_group_id(0);
