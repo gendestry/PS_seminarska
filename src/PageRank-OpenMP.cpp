@@ -13,10 +13,10 @@ int main(int argc, char** argv) {
 	int datatype = 1; // 0 = float, 1 = double
 	int itertype = 1; // 0 = graph, 1 = matrix
 
-	if(argc > 3) {
-		error = atof(argv[1]);
-		datatype = atoi(argv[2]);
-		itertype = atoi(argv[3]);
+	switch(argc){
+		case 4: itertype = atoi(argv[3]);
+		case 3: datatype = atoi(argv[2]);
+		case 2: error = atof(argv[1]);
 	}
 
 	if(datatype == 0) {

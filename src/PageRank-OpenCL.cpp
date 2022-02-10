@@ -12,10 +12,10 @@ int main(int argc, char** argv) {
 	double error = 1e-5;
 	int datatype = 1; // 0 = float, 1 = double
 	int workgroupSize = 128;
-	if(argc > 3) {
-		error = atof(argv[1]);
-		datatype = atoi(argv[2]);
-		workgroupSize = atoi(argv[3]);
+	switch(argc){
+		case 4: workgroupSize = atoi(argv[3]);
+		case 3: datatype = atoi(argv[2]);
+		case 2: error = atof(argv[1]);
 	}
 
 	datatype == 0 ? sparseMatrixIteration<float>("graph-google.txt", workgroupSize, error) : sparseMatrixIteration<double>("graph-google.txt", workgroupSize, error);
