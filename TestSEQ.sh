@@ -9,7 +9,19 @@
 #SBATCH --constraint=AMD
 #SBATCH --reservation=fri
 
-for ITERS in {1..5} 
+for ITERTYPE in 0 1
 do
-	bin/PageRank
+	echo "ITERTYPE:" $ITERTYPE
+	for DATATYPE in 0 1
+	do
+		echo "#DATATYPE:" $DATATYPE
+		for ERROR in 1e-5 1e-6 1e-7
+		do
+			echo "##ERROR:" $ERROR
+			for ITERS in {1..5} 
+			do
+				bin/PageRank $ERROR $DATATYPE $ITERTYPE
+			done
+		done
+	done
 done

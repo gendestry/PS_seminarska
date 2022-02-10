@@ -12,9 +12,17 @@
 
 for WGS in 1 2 4 8 16 32 64 128 256
 do
-	echo $WGS
-	for ITERS in {1..5} 
+	echo "WGS:" $WGS
+	for DATATYPE in 0 1
 	do
-		bin/PageRank-OpenCL $WGS 
+		echo "#DATATYPE:" $DATATYPE
+		for ERROR in 1e-5 1e-6 1e-7
+		do
+			echo "##ERROR:" $ERROR
+			for ITERS in {1..5} 
+			do
+				bin/PageRank-OpenCL $ERROR $DATATYPE $WGS
+			done
+		done
 	done
 done
