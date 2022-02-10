@@ -20,8 +20,8 @@ public:
 
 	void stop() {
 		auto time_stop = std::chrono::high_resolution_clock::now();
-		auto time = std::chrono::duration_cast<std::chrono::microseconds>(time_stop - time_start);
-		std::cout << name << ": " << time.count() / 1e6 << std::endl;
+		auto time = std::chrono::duration_cast<std::chrono::nanoseconds>(time_stop - time_start);
+		printf("%.9f\n", time.count() / 1e9);
 		done = true;
 	}
 };
