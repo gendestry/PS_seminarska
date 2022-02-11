@@ -15,12 +15,12 @@ do
 	for DATATYPE in 0 1
 	do
 		echo "#DATATYPE:" $DATATYPE
-		for ERROR in 1e-5 1e-6 1e-7
+		for VERTICES in 10000 20000 50000 100000 200000 500000 -1
 		do
-			echo "##ERROR:" $ERROR
-			for ITERS in {1..5} 
+			echo "##VERTICES:" $VERTICES
+			for ITERS in {1..25}
 			do
-				bin/PageRank $ERROR $DATATYPE $ITERTYPE
+				bin/PageRank 1e-7 $DATATYPE $VERTICES $ITERTYPE
 			done
 		done
 	done
