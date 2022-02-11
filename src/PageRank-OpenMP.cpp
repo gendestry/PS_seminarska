@@ -3,35 +3,40 @@
 #include "Timer.h"
 
 template<typename T>
-void graphIteration(std::string path, double error);
+void graphIteration(std::string path, double error, int numVerts);
 
 template<typename T>
-void sparseMatrixIteration(std::string path, double error);
+void sparseMatrixIteration(std::string path, double error, int numVerts);
 
 int main(int argc, char** argv) {
 	double error = 1e-5;
 	int datatype = 1; // 0 = float, 1 = double
 	int itertype = 1; // 0 = graph, 1 = matrix
+	int numVerts = -1;
 
 	switch(argc){
-		case 4: itertype = atoi(argv[3]);
+		case 5: itertype = atoi(argv[4]);
+		case 4: numVerts = atoi(argv[3]);
 		case 3: datatype = atoi(argv[2]);
 		case 2: error = atof(argv[1]);
 	}
+	if(numVerts == -1){
+		numVerts = INT32_MAX;
+	}
 
 	if(datatype == 0) {
-		itertype == 0 ? graphIteration<float>("graph-google.txt", error) : sparseMatrixIteration<float>("graph-google.txt", error);
+		itertype == 0 ? graphIteration<float>("graph-google.txt", error, numVerts) : sparseMatrixIteration<float>("graph-google.txt", error, numVerts);
 	}
 	else {
-		itertype == 0 ? graphIteration<double>("graph-google.txt", error) : sparseMatrixIteration<double>("graph-google.txt", error);
+		itertype == 0 ? graphIteration<double>("graph-google.txt", error, numVerts) : sparseMatrixIteration<double>("graph-google.txt", error, numVerts);
 	}
 
 	return 0;
 }
 
 template<typename T>
-void graphIteration(std::string path, double err) {
-	NodesData<T> nodesData = Parser::getNodes<T>(path);
+void graphIteration(std::string path, double err, int numVerts) {
+	NodesData<T> nodesData = Parser::getNodes<T>(path, numVerts);
 	auto& nodes = nodesData.nodes;
 	std::vector<int> keys = nodesData.keys;
 	Timer t("Graph");
@@ -85,8 +90,8 @@ void graphIteration(std::string path, double err) {
 }
 
 template<typename T>
-void sparseMatrixIteration(std::string path, double err) {
-	auto matrixInfo = Parser::getSparseMatrix<T>(path);
+void sparseMatrixIteration(std::string path, double err, int numVerts) {
+	auto matrixInfo = Parser::getSparseMatrix<T>(path, numVerts);
 	auto& M = matrixInfo.matrix;
 	Timer t("Matrix");
 

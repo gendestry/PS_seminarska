@@ -24,8 +24,8 @@ public:
 	~Parser() = delete;
 
 	template<class T>
-	static NodesData<T> getNodes(std::string path);
+	static NodesData<T> getNodes(std::string path, int numVerts);
 
 	template<class T>
-	static SparseMatrixData<T> getSparseMatrix(std::string path);
+	static SparseMatrixData<T> getSparseMatrix(std::string path, int numVerts);
 };

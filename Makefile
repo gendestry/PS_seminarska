@@ -1,5 +1,4 @@
 N ?= 16
-WG ?= 128
 
 .phony: clean
 
@@ -43,7 +42,7 @@ run_omp: omp
 	srun -n1 --cpus-per-task=$(N) --reservation=fri bin/PageRank-OpenMP
 
 run_ocl: ocl
-	srun -n1 -G1 --reservation=fri bin/PageRank-OpenCL $(WG)
+	srun -n1 -G1 --reservation=fri bin/PageRank-OpenCL
 
 # clean
 clean:

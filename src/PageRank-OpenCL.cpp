@@ -6,24 +6,29 @@
 
 
 template<typename T>
-void sparseMatrixIteration(std::string path, int wgSize, double error);
+void sparseMatrixIteration(std::string path, int wgSize, double error, int numVerts);
 
 int main(int argc, char** argv) {
 	double error = 1e-5;
 	int datatype = 1; // 0 = float, 1 = double
 	int workgroupSize = 128;
+	int numVerts = -1;
 	switch(argc){
-		case 4: workgroupSize = atoi(argv[3]);
+		case 5: workgroupSize = atoi(argv[4]);
+		case 4: numVerts = atoi(argv[3]);
 		case 3: datatype = atoi(argv[2]);
 		case 2: error = atof(argv[1]);
 	}
+	if(numVerts == -1){
+		numVerts = INT32_MAX;
+	}
 
-	datatype == 0 ? sparseMatrixIteration<float>("graph-google.txt", workgroupSize, error) : sparseMatrixIteration<double>("graph-google.txt", workgroupSize, error);
+	datatype == 0 ? sparseMatrixIteration<float>("graph-google.txt", workgroupSize, error, numVerts) : sparseMatrixIteration<double>("graph-google.txt", workgroupSize, error, numVerts);
 }
 
 template<typename T>
-void sparseMatrixIteration(std::string path, int workgroupSize, double err) {
-	auto matrixInfo = Parser::getSparseMatrix<T>(path);
+void sparseMatrixIteration(std::string path, int workgroupSize, double err, int numVerts) {
+	auto matrixInfo = Parser::getSparseMatrix<T>(path, numVerts);
 	auto& M = matrixInfo.matrix;
 	const int N = matrixInfo.idMap.size();
 	const T initRank = 1.0 / N;

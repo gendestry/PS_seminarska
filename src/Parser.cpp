@@ -3,7 +3,7 @@
 
 
 template<class T>
-NodesData<T> Parser::getNodes(std::string path) {
+NodesData<T> Parser::getNodes(std::string path, int numVerts) {
 	NodesData<T> data;
 	auto& nodes = data.nodes;
 	std::vector<int>& idMap = data.keys;
@@ -18,12 +18,14 @@ NodesData<T> Parser::getNodes(std::string path) {
 	Node<T>* to = nullptr;
 	Node<T>* prevfrom = nullptr;
 
+	int vertCount = 0;
 	while (std::getline(file, line)) {
 		if (line[0] == '#') continue;
 
 		tabloc = line.find('\t');
 		from_id = atoi(line.substr(0, tabloc).c_str());
 		to_id = atoi(line.substr(tabloc + 1).c_str());
+		if(vertCount >= numVerts && (nodes.find(from_id) == nodes.end() || nodes.find(to_id) == nodes.end())) continue;
 
 		// get the "from" node, if it doenst exist, create it
 		if (from == nullptr || from_id != from->id) {
@@ -36,11 +38,13 @@ NodesData<T> Parser::getNodes(std::string path) {
 				from->id = from_id;
 				nodes[from_id] = from;
 				idMap.push_back(from_id);
+				vertCount++;
 			}
 		}
 
 		// get the "to" node, if it doesn't exist, create it
 		auto res = nodes.find(to_id);
+		if(vertCount >= numVerts && res == nodes.end()) continue;
 		if (res != nodes.end()) {
 			to = res->second;
 		}
@@ -49,6 +53,7 @@ NodesData<T> Parser::getNodes(std::string path) {
 			to->id = to_id;
 			nodes[to_id] = to;
 			idMap.push_back(to_id);
+			vertCount++;
 		}
 
 		// append the "from" node to "to" node's children and increase the outbound connection count of "from" node
@@ -61,7 +66,7 @@ NodesData<T> Parser::getNodes(std::string path) {
 }
 
 template <class T>
-SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
+SparseMatrixData<T> Parser::getSparseMatrix(std::string path, int numVerts) {
 	SparseMatrixData<T> ret;
 
 	std::ifstream file(path);
@@ -85,6 +90,7 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
 	int i = 0;
 	std::vector<SparseValue<T>> data;
 
+	int vertCount = 0;
 	while (std::getline(file, line)) {
 		if (line[0] == '#') continue;
 
@@ -92,16 +98,20 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
 		tabloc = line.find('\t');
 		from_id = atoi(line.substr(0, tabloc).c_str());
 		to_id = atoi(line.substr(tabloc + 1).c_str());
+		if(vertCount >= numVerts && (idMap.find(from_id) == idMap.end() || idMap.find(to_id) == idMap.end())) continue;
 
 		// Construct id_map
 		if(from_id != prev_id){
 			if(idMap.find(from_id) == idMap.end()){
 				idMap[from_id] = id++;
+				vertCount++;
 			}
 		}
 
 		if(idMap.find(to_id) == idMap.end()){
+			if(vertCount >= numVerts) continue;
 			idMap[to_id] = id++;
+			vertCount++;
 		}
 
 		// Add elements
@@ -129,8 +139,8 @@ SparseMatrixData<T> Parser::getSparseMatrix(std::string path) {
 	return ret;
 }
 
-template NodesData<float> Parser::getNodes(std::string path);
-template NodesData<double> Parser::getNodes(std::string path);
+template NodesData<float> Parser::getNodes(std::string path, int numVerts);
+template NodesData<double> Parser::getNodes(std::string path, int numVerts);
 
-template SparseMatrixData<float> Parser::getSparseMatrix(std::string path);
-template SparseMatrixData<double> Parser::getSparseMatrix(std::string path);
+template SparseMatrixData<float> Parser::getSparseMatrix(std::string path, int numVerts);
+template SparseMatrixData<double> Parser::getSparseMatrix(std::string path, int numVerts);
